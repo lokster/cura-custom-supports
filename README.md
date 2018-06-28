@@ -1,8 +1,10 @@
 # Custom Supports plugin for Cura
+
 Cura plugin which enables you to add custom supports!
 It is based on the SupportEraser plugin.
 The initial version was tested on Cura 3.3 and 3.4
 More information can be found on http://lokspace.eu/cura-custom-supports-plugin/
+
 Installation
 ----
 * Make sure your Cura version is 3.3 or newer
