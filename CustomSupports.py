@@ -103,7 +103,7 @@ class CustomSupports(Tool):
         node.setName("Eraser")
         node.setSelectable(True)
         mesh = MeshBuilder()
-        mesh.addCube(5,5,10)
+        mesh.addCube(5,5,5)
         node.setMeshData(mesh.build())
 
         active_build_plate = Application.getInstance().getMultiBuildPlateModel().activeBuildPlate

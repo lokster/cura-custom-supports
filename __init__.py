@@ -9,7 +9,7 @@ i18n_catalog = i18nCatalog("cura")
 def getMetaData():
     return {
         "tool": {
-            "name": i18n_catalog.i18nc("@label", "Custom Support"),
+            "name": i18n_catalog.i18nc("@label", "Custom Supports"),
             "description": i18n_catalog.i18nc("@info:tooltip", "Add custom supports"),
             "icon": "tool_icon.svg",
             "weight": 4
