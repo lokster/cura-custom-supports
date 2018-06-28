@@ -1,2 +1,1 @@
-# cura-custom-support
-Custom Support plugin for Cura
+# Custom Supports plugin for Cura

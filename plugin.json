@@ -1,0 +1,8 @@
+{
+    "name": "Custom Supports",
+    "author": "Lokster",
+    "version": "0.0.1",
+    "description": "Create custom supports",
+    "api": 4,
+    "i18n-catalog": "cura"
+}
