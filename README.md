@@ -21,3 +21,5 @@ How to use
 - click anywhere on the model to place support block there
 - clicking existing support block deletes it
 Note: it's easier to add/remove supports when you are in "Solid View" mode
+
+You can see the plugin in action here: https://www.youtube.com/watch?v=bMZLVWhbPEU
