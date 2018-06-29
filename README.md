@@ -11,6 +11,7 @@ Installation
 * Download & extract the ZIP from the releases page OR clone the repository
   - on Windows in: [Cura installation folder]/plugins/CustomSupports
   - on Linux in: ~/.local/share/cura/[YOUR CURA VERSION]/plugins/CustomSupports
+  - on Mac in: ~/Library/Application Support/cura/[YOUR CURA VERSION]/plugins/CustomSupports
 * The files *must* be placed in the ```CustomSupports``` directory, and the directory *must* be named ```CustomSupports```
 
 How to use
