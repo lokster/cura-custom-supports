@@ -7,12 +7,19 @@ More information can be found on http://lokspace.eu/cura-custom-supports-plugin/
 
 Installation
 ----
-* Make sure your Cura version is 3.3 or newer
-* Download & extract the ZIP from the releases page OR clone the repository
-  - on Windows in: [Cura installation folder]/plugins/CustomSupports
-  - on Linux in: ~/.local/share/cura/[YOUR CURA VERSION]/plugins/CustomSupports
-  - on Mac in: ~/Library/Application Support/cura/[YOUR CURA VERSION]/plugins/CustomSupports
-* The files *must* be placed in the ```CustomSupports``` directory, and the directory *must* be named ```CustomSupports```
+First, make sure your Cura version is 3.3 or newer
+There are two ways to install the plugin - manual and automatic
+
+**Automatic Install**
+Go to the releases page, and download the correct file for your Cura version - the .curaplugin file for Cura 3.3.x and the .curapackage file for Cura 3.4 and newer.
+Start Cura, and drag & drop the file on the main window. Restart Cura, and you are done!
+
+**Manual Install**
+Download & extract the repository as ZIP or clone it. Copy the files/plugins/CustomSupports directory to:
+- on Windows: [Cura installation folder]/plugins/CustomSupports
+- on Linux: ~/.local/share/cura/[YOUR CURA VERSION]/plugins/CustomSupports (e.g. ~/.local/share/cura/3.4/plugins/CustomSupports)
+- on Mac: ~/Library/Application Support/cura/[YOUR CURA VERSION]/plugins/CustomSupports
+
 
 How to use
 ----
