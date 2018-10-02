@@ -1,5 +1,5 @@
-# Copyright (c) 2018 Ultimaker B.V.
-# Cura is released under the terms of the LGPLv3 or higher.
+# Copyright (c) 2018 Lokster <http://lokspace.eu>
+# Based on the SupportBlocker plugin by Ultimaker B.V., and licensed under LGPLv3 or higher.
 
 from PyQt5.QtCore import Qt, QTimer
 from PyQt5.QtWidgets import QApplication

@@ -1,5 +1,5 @@
 # Copyright (c) 2018 Lokster <http://lokspace.eu>
-# Based on the SupportBlocker plugin, and licensed under LGPLv3 or higher.
+# Based on the SupportBlocker plugin by Ultimaker B.V., and licensed under LGPLv3 or higher.
 
 from . import CustomSupports
 
