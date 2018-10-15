@@ -30,7 +30,7 @@ import numpy
 class CustomSupports(Tool):
     def __init__(self):
         super().__init__()
-        self._shortcut_key = Qt.Key_E
+        self._shortcut_key = Qt.Key_C
         self._controller = self.getController()
 
         self._selection_pass = None
