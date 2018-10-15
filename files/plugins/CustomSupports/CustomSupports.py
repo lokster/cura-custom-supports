@@ -60,7 +60,7 @@ class CustomSupports(Tool):
                 return
 
             if self._skip_press:
-                # The selection was previously cleared, do not add/remove an anti-support mesh but
+                # The selection was previously cleared, do not add/remove an support mesh but
                 # use this click for selection and reactivating this tool only.
                 self._skip_press = False
                 return
@@ -96,7 +96,7 @@ class CustomSupports(Tool):
     def _createSupportMesh(self, parent: CuraSceneNode, position: Vector):
         node = CuraSceneNode()
 
-        node.setName("Eraser")
+        node.setName("CustomSupport")
         node.setSelectable(True)
         mesh = self._createCube(5)
         node.setMeshData(mesh.build())
@@ -115,7 +115,7 @@ class CustomSupports(Tool):
         settings.addInstance(new_instance)
 
         op = GroupedOperation()
-        # First add node to the scene at the correct position/scale, before parenting, so the eraser mesh does not get scaled with the parent
+        # First add node to the scene at the correct position/scale, before parenting, so the support mesh does not get scaled with the parent
         op.addOperation(AddSceneNodeOperation(node, self._controller.getScene().getRoot()))
         op.addOperation(SetParentOperation(node, parent))
         op.push()
