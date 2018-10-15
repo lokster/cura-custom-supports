@@ -108,11 +108,12 @@ class CustomSupports(Tool):
         stack = node.callDecoration("getStack") # created by SettingOverrideDecorator that is automatically added to CuraSceneNode
         settings = stack.getTop()
 
-        definition = stack.getSettingDefinition("support_mesh")
-        new_instance = SettingInstance(definition, settings)
-        new_instance.setProperty("value", True)
-        new_instance.resetState()  # Ensure that the state is not seen as a user state.
-        settings.addInstance(new_instance)
+        for key in ["support_mesh", "support_mesh_drop_down"]:
+            definition = stack.getSettingDefinition(key)
+            new_instance = SettingInstance(definition, settings)
+            new_instance.setProperty("value", True)
+            new_instance.resetState()  # Ensure that the state is not seen as a user state.
+            settings.addInstance(new_instance)
 
         op = GroupedOperation()
         # First add node to the scene at the correct position/scale, before parenting, so the support mesh does not get scaled with the parent
