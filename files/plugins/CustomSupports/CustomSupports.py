@@ -30,7 +30,7 @@ import numpy
 class CustomSupports(Tool):
     def __init__(self):
         super().__init__()
-        self._shortcut_key = Qt.Key_E
+        self._shortcut_key = Qt.Key_C
         self._controller = self.getController()
 
         self._selection_pass = None
@@ -60,7 +60,7 @@ class CustomSupports(Tool):
                 return
 
             if self._skip_press:
-                # The selection was previously cleared, do not add/remove an anti-support mesh but
+                # The selection was previously cleared, do not add/remove an support mesh but
                 # use this click for selection and reactivating this tool only.
                 self._skip_press = False
                 return
@@ -96,7 +96,7 @@ class CustomSupports(Tool):
     def _createSupportMesh(self, parent: CuraSceneNode, position: Vector):
         node = CuraSceneNode()
 
-        node.setName("Eraser")
+        node.setName("CustomSupport")
         node.setSelectable(True)
         mesh = self._createCube(5)
         node.setMeshData(mesh.build())
@@ -108,14 +108,15 @@ class CustomSupports(Tool):
         stack = node.callDecoration("getStack") # created by SettingOverrideDecorator that is automatically added to CuraSceneNode
         settings = stack.getTop()
 
-        definition = stack.getSettingDefinition("support_mesh")
-        new_instance = SettingInstance(definition, settings)
-        new_instance.setProperty("value", True)
-        new_instance.resetState()  # Ensure that the state is not seen as a user state.
-        settings.addInstance(new_instance)
+        for key in ["support_mesh", "support_mesh_drop_down"]:
+            definition = stack.getSettingDefinition(key)
+            new_instance = SettingInstance(definition, settings)
+            new_instance.setProperty("value", True)
+            new_instance.resetState()  # Ensure that the state is not seen as a user state.
+            settings.addInstance(new_instance)
 
         op = GroupedOperation()
-        # First add node to the scene at the correct position/scale, before parenting, so the eraser mesh does not get scaled with the parent
+        # First add node to the scene at the correct position/scale, before parenting, so the support mesh does not get scaled with the parent
         op.addOperation(AddSceneNodeOperation(node, self._controller.getScene().getRoot()))
         op.addOperation(SetParentOperation(node, parent))
         op.push()
