@@ -9,7 +9,7 @@
     "display_name": "Custom Supports",
     "package_id": "CustomSupports",
     "package_type": "plugin",
-    "package_version": "0.0.2",
+    "package_version": "0.0.3",
     "sdk_version": 5,
     "tags": [
         "plugin"
