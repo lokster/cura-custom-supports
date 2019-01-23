@@ -1,8 +1,9 @@
 {
     "name": "Custom Supports",
     "author": "Lokster",
-    "version": "0.0.3",
+    "version": "0.0.4",
     "description": "Create custom supports",
+    "i18n-catalog": "cura",
     "api": 5,
-    "i18n-catalog": "cura"
+    "supported_sdk_versions": ["5.0.0", "6.0.0"]
 }
