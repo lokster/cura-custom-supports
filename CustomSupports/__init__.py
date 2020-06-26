@@ -12,6 +12,7 @@ def getMetaData():
             "name": i18n_catalog.i18nc("@label", "Custom Supports"),
             "description": i18n_catalog.i18nc("@info:tooltip", "Add custom supports"),
             "icon": "tool_icon.svg",
+            "tool_panel": "CustomSupports.qml",
             "weight": 4
         }
     }

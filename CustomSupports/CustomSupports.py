@@ -4,7 +4,6 @@
 from PyQt5.QtCore import Qt, QTimer
 from PyQt5.QtWidgets import QApplication
 
-from UM.Application import Application
 from UM.Math.Vector import Vector
 from UM.Tool import Tool
 from UM.Event import Event, MouseEvent
@@ -24,16 +23,26 @@ from cura.Scene.SliceableObjectDecorator import SliceableObjectDecorator
 from cura.Scene.BuildPlateDecorator import BuildPlateDecorator
 
 from UM.Settings.SettingInstance import SettingInstance
+#from UM.Scene.ToolHandle import ToolHandle
+from UM.Tool import Tool
 
+import math
 import numpy
 
 class CustomSupports(Tool):
     def __init__(self):
         super().__init__()
+        self._SupportType = 'cube'
+        self._SupportSize = 5.0
+        self._SupportBaseSize = 7.5
+        self._DropToBuildplate = True
+        self._WiderBase = False
+        
         self._shortcut_key = Qt.Key_C
         self._controller = self.getController()
-
         self._selection_pass = None
+        self.setExposedProperties("SupportSize", "SupportType", "DropToBuildplate", "SupportBaseSize", "WiderBase")
+
         CuraApplication.getInstance().globalContainerStackChanged.connect(self._updateEnabled)
 
         # Note: if the selection is cleared with this tool active, there is no way to switch to
@@ -48,7 +57,21 @@ class CustomSupports(Tool):
         self._had_selection_timer.setInterval(0)
         self._had_selection_timer.setSingleShot(True)
         self._had_selection_timer.timeout.connect(self._selectionChangeDelay)
-
+        
+        # set the preferences to store the default value
+        self._preferences = CuraApplication.getInstance().getPreferences()
+        self._preferences.addPreference("customsupports/support_size", 5)
+        self._preferences.addPreference("customsupports/support_type", 'cube')
+        self._preferences.addPreference("customsupports/support_base_size", 7.5)
+        self._preferences.addPreference("customsupports/drop_to_buildplate", True)
+        self._preferences.addPreference("customsupports/wider_base", True)
+        # convert as float to avoid further issue
+        self._SupportSize = float(self._preferences.getValue("customsupports/support_size"))
+        self._SupportBaseSize = float(self._preferences.getValue("customsupports/support_base_size"))
+        self._SupportType = str(self._preferences.getValue("customsupports/support_type"))
+        self._DropToBuildplate = bool(self._preferences.getValue("customsupports/drop_to_buildplate"))
+        self._WiderBase = bool(self._preferences.getValue("customsupports/wider_base"))
+        
     def event(self, event):
         super().event(event)
         modifiers = QApplication.keyboardModifiers()
@@ -67,7 +90,7 @@ class CustomSupports(Tool):
 
             if self._selection_pass is None:
                 # The selection renderpass is used to identify objects in the current view
-                self._selection_pass = Application.getInstance().getRenderer().getRenderPass("selection")
+                self._selection_pass = CuraApplication.getInstance().getRenderer().getRenderPass("selection")
             picked_node = self._controller.getScene().findObject(self._selection_pass.getIdAtPosition(event.x, event.y))
             if not picked_node:
                 # There is no slicable object at the picked location
@@ -95,10 +118,18 @@ class CustomSupports(Tool):
 
     def _createSupportMesh(self, parent: CuraSceneNode, position: Vector):
         node = CuraSceneNode()
-
-        node.setName("CustomSupport")
         node.setSelectable(True)
-        mesh = self._createCube(5)
+        
+        if self._SupportType == 'cylinder':
+            height = position.y
+            node.setName("CustomSupportCylinder")
+            mesh = self._createCylinder(self._SupportSize,22.5,height)
+            node_position = Vector(position.x,position.y,position.z)
+        else:
+            node.setName("CustomSupportCube")
+            height = position.y-self._SupportSize/2+self._SupportSize*0.1
+            mesh =  self._createCube(self._SupportSize,height)
+            node_position = Vector(position.x,position.y-self._SupportSize/2+self._SupportSize*0.1,position.z)
         node.setMeshData(mesh.build())
 
         active_build_plate = CuraApplication.getInstance().getMultiBuildPlateModel().activeBuildPlate
@@ -120,7 +151,7 @@ class CustomSupports(Tool):
         op.addOperation(AddSceneNodeOperation(node, self._controller.getScene().getRoot()))
         op.addOperation(SetParentOperation(node, parent))
         op.push()
-        node.setPosition(position, CuraSceneNode.TransformSpace.World)
+        node.setPosition(node_position, CuraSceneNode.TransformSpace.World)
 
         CuraApplication.getInstance().getController().getScene().sceneChanged.emit(node)
 
@@ -163,20 +194,36 @@ class CustomSupports(Tool):
 
         self._had_selection = has_selection
 
-    def _createCube(self, size):
+    def _createCube(self, size, height):
         mesh = MeshBuilder()
 
         # Can't use MeshBuilder.addCube() because that does not get per-vertex normals
         # Per-vertex normals require duplication of vertices
         s = size / 2
-        verts = [ # 6 faces with 4 corners each
-            [-s, -s,  s], [-s,  s,  s], [ s,  s,  s], [ s, -s,  s],
-            [-s,  s, -s], [-s, -s, -s], [ s, -s, -s], [ s,  s, -s],
-            [ s, -s, -s], [-s, -s, -s], [-s, -s,  s], [ s, -s,  s],
-            [-s,  s, -s], [ s,  s, -s], [ s,  s,  s], [-s,  s,  s],
-            [-s, -s,  s], [-s, -s, -s], [-s,  s, -s], [-s,  s,  s],
-            [ s, -s, -s], [ s, -s,  s], [ s,  s,  s], [ s,  s, -s]
-        ]
+        l = height
+        #s_inf=math.tan(math.radians(dep))*l+s
+        if self._WiderBase:
+            base_size = self._SupportBaseSize/2
+        else:
+            base_size = s
+        if self._DropToBuildplate:
+            verts = [ # 6 faces with 4 corners each
+                [-base_size, -l,  base_size], [-s,  s,  s], [ s,  s,  s], [ base_size, -l,  base_size],
+                [-s,  s, -s], [-base_size, -l, -base_size], [ base_size, -l, -base_size], [ s,  s, -s],
+                [ base_size, -l, -base_size], [-base_size, -l, -base_size], [-base_size, -l,  base_size], [ base_size, -l,  base_size],
+                [-s,  s, -s], [ s,  s, -s], [ s,  s,  s], [-s,  s,  s],
+                [-base_size, -l,  base_size], [-base_size, -l, -base_size], [-s,  s, -s], [-s,  s,  s],
+                [ base_size, -l, -base_size], [ base_size, -l,  base_size], [ s,  s,  s], [ s,  s, -s]
+            ]
+        else:
+            verts = [ # 6 faces with 4 corners each
+                [-s, -s,  s], [-s,  s,  s], [ s,  s,  s], [ s, -s,  s],
+                [-s,  s, -s], [-s, -s, -s], [ s, -s, -s], [ s,  s, -s],
+                [ s, -s, -s], [-s, -s, -s], [-s, -s,  s], [ s, -s,  s],
+                [-s,  s, -s], [ s,  s, -s], [ s,  s,  s], [-s,  s,  s],
+                [-s, -s,  s], [-s, -s, -s], [-s,  s, -s], [-s,  s,  s],
+                [ s, -s, -s], [ s, -s,  s], [ s,  s,  s], [ s,  s, -s]
+            ]
         mesh.setVertices(numpy.asarray(verts, dtype=numpy.float32))
 
         indices = []
@@ -187,3 +234,116 @@ class CustomSupports(Tool):
 
         mesh.calculateNormals()
         return mesh
+	
+    def _createCylinder(self, size, nb , height):
+        mesh = MeshBuilder()
+        # Per-vertex normals require duplication of vertices
+        r = size / 2
+        # additionale length
+        sup = size * 0.1
+        l = -height
+        rng = int(360 / nb)
+        ang = math.radians(nb)
+        verts = []
+        
+        if self._WiderBase:
+            r_base = self._SupportBaseSize/2
+        else:
+            r_base = r
+
+        if self._DropToBuildplate:
+            for i in range(0, rng):
+                # Top
+                verts.append([0, sup, 0])
+                verts.append([r*math.cos((i+1)*ang), sup, r*math.sin((i+1)*ang)])
+                verts.append([r*math.cos(i*ang), sup, r*math.sin(i*ang)])
+                #Side 1a
+                verts.append([r*math.cos(i*ang), sup, r*math.sin(i*ang)])
+                verts.append([r*math.cos((i+1)*ang), sup, r*math.sin((i+1)*ang)])
+                verts.append([r_base*math.cos((i+1)*ang), l, r_base*math.sin((i+1)*ang)])
+                #Side 1b
+                verts.append([r_base*math.cos((i+1)*ang), l, r_base*math.sin((i+1)*ang)])
+                verts.append([r_base*math.cos(i*ang), l, r_base*math.sin(i*ang)])
+                verts.append([r*math.cos(i*ang), sup, r*math.sin(i*ang)])
+                #Bottom 
+                verts.append([0, l, 0])
+                verts.append([r_base*math.cos((i+1)*ang), l, r_base*math.sin((i+1)*ang)]) 
+                verts.append([r_base*math.cos(i*ang), l, r_base*math.sin(i*ang)])
+        else:
+            for i in range(0, rng):
+                # Top
+                verts.append([0, sup, 0])
+                verts.append([r*math.cos((i+1)*ang), sup, r*math.sin((i+1)*ang)])
+                verts.append([r*math.cos(i*ang), sup, r*math.sin(i*ang)])
+                #Side 1a
+                verts.append([r*math.cos(i*ang), sup, r*math.sin(i*ang)])
+                verts.append([r*math.cos((i+1)*ang), sup, r*math.sin((i+1)*ang)])
+                verts.append([r*math.cos((i+1)*ang), -size, r*math.sin((i+1)*ang)])
+                #Side 1b
+                verts.append([r*math.cos((i+1)*ang), -size, r*math.sin((i+1)*ang)])
+                verts.append([r*math.cos(i*ang), -size, r*math.sin(i*ang)])
+                verts.append([r*math.cos(i*ang), sup, r*math.sin(i*ang)])
+                #Bottom 
+                verts.append([0, -size, 0])
+                verts.append([r*math.cos((i+1)*ang), -size, r*math.sin((i+1)*ang)]) 
+                verts.append([r*math.cos(i*ang), -size, r*math.sin(i*ang)])
+        
+        
+        mesh.setVertices(numpy.asarray(verts, dtype=numpy.float32))
+        indices = []
+        # for every angle increment 12 Vertices
+        tot = rng * 12
+        for i in range(0, tot, 3): # 
+            indices.append([i, i+1, i+2])
+        mesh.setIndices(numpy.asarray(indices, dtype=numpy.int32))
+        mesh.calculateNormals()
+        return mesh
+    
+    def getSupportSize(self) -> float:
+        return self._SupportSize
+  
+    def setSupportSize(self, SupportSize: str) -> None:
+        try:
+            s_value = float(SupportSize)
+        except ValueError:
+            return
+
+        if s_value <= 0:
+            return
+        self._SupportSize = s_value
+        self._preferences.setValue("customsupports/support_size", s_value)
+
+    def getSupportBaseSize(self) -> float:
+        return self._SupportBaseSize
+  
+    def setSupportBaseSize(self, SupportBaseSize: str) -> None:
+        try:
+            s_value = float(SupportBaseSize)
+        except ValueError:
+            return
+
+        if s_value <= 0:
+            return
+        self._SupportBaseSize = s_value
+        self._preferences.setValue("customsupports/support_base_size", s_value)
+
+    def setWiderBase (self, WiderBase: bool) -> None:
+        self._WiderBase = WiderBase
+        self._preferences.setValue("customsupports/wider_base", WiderBase)
+    
+    def getWiderBase(self) -> bool:
+        return self._WiderBase
+    
+    def getDropToBuildplate(self) -> bool:
+        return self._DropToBuildplate
+    
+    def setDropToBuildplate(self, DropToBuildplate: bool) -> None:
+        self._DropToBuildplate = DropToBuildplate
+        self._preferences.setValue("customsupports/drop_to_buildplate", DropToBuildplate)
+        
+    def getSupportType(self) -> bool:
+        return self._SupportType
+    
+    def setSupportType(self, SupportType: str) -> None:
+        self._SupportType = SupportType
+        self._preferences.setValue("customsupports/support_type", SupportType)
