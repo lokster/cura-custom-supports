@@ -1,8 +1,14 @@
 # Copyright (c) 2018 Lokster <http://lokspace.eu>
 # Based on the SupportBlocker plugin by Ultimaker B.V., and licensed under LGPLv3 or higher.
 
-from PyQt5.QtCore import Qt, QTimer
-from PyQt5.QtWidgets import QApplication
+IS_QT5 = False
+try:
+    from PyQt6.QtCore import Qt, QTimer
+    from PyQt6.QtWidgets import QApplication
+except:
+    from PyQt5.QtCore import Qt, QTimer
+    from PyQt5.QtWidgets import QApplication
+    IS_QT5 = True
 
 from UM.Math.Vector import Vector
 from UM.Tool import Tool
@@ -37,8 +43,8 @@ class CustomSupports(Tool):
         self._SupportBaseSize = 7.5
         self._DropToBuildplate = True
         self._WiderBase = False
-        
-        self._shortcut_key = Qt.Key_C
+
+        self._shortcut_key = Qt.Key_C if IS_QT5 else Qt.Key.Key_C
         self._controller = self.getController()
         self._selection_pass = None
         self.setExposedProperties("SupportSize", "SupportType", "DropToBuildplate", "SupportBaseSize", "WiderBase")
@@ -75,7 +81,9 @@ class CustomSupports(Tool):
     def event(self, event):
         super().event(event)
         modifiers = QApplication.keyboardModifiers()
-        ctrl_is_active = modifiers & Qt.ControlModifier
+        ctrl_is_active = (
+            modifiers & (Qt.ControlModifier if IS_QT5 else Qt.KeyboardModifier.ControlModifier)
+        )
 
         if event.type == Event.MousePressEvent and MouseEvent.LeftButton in event.buttons and self._controller.getToolsEnabled():
             if ctrl_is_active:
@@ -341,7 +349,7 @@ class CustomSupports(Tool):
         self._DropToBuildplate = DropToBuildplate
         self._preferences.setValue("customsupports/drop_to_buildplate", DropToBuildplate)
         
-    def getSupportType(self) -> bool:
+    def getSupportType(self) -> str:
         return self._SupportType
     
     def setSupportType(self, SupportType: str) -> None:
